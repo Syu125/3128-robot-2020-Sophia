@@ -1,4 +1,4 @@
-package org.team3128.athos.main;
+package org.team3128.testbench.main;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
@@ -51,8 +51,8 @@ import java.util.concurrent.*;
 
 import org.team3128.common.generics.ThreadScheduler;
 
-public class MainAthos extends NarwhalRobot {
-    NEODrive drive = NEODrive.getInstance();
+public class testBench extends NarwhalRobot {
+    //NEODrive drive = NEODrive.getInstance();
     RobotTracker robotTracker = RobotTracker.getInstance();
 
     ExecutorService executor = Executors.newFixedThreadPool(4);
@@ -64,7 +64,6 @@ public class MainAthos extends NarwhalRobot {
     public Gyro gyro;
 
     public DigitalInput digitalInput;
-    
     public PIDConstants visionPID, blindPID;
 
     public NetworkTable table;
@@ -83,9 +82,10 @@ public class MainAthos extends NarwhalRobot {
 
     @Override
     protected void constructHardware() {
+        
+        digitalInput = new DigitalInput(0);
 
-        digitalInput = new  DigitalInput(0);
-        scheduler.schedule(drive, executor);
+        //scheduler.schedule(drive, executor);
         scheduler.schedule(robotTracker, executor);
 
         // Instatiator if we're using the NavX
@@ -135,6 +135,7 @@ public class MainAthos extends NarwhalRobot {
 
     @Override
     protected void constructAutoPrograms() {
+       
     }
 
     @Override
@@ -147,11 +148,11 @@ public class MainAthos extends NarwhalRobot {
         lm.nameControl(new Button(3), "ClearTracker");
         lm.nameControl(new Button(4), "ClearCSV");
 
-        lm.addMultiListener(() -> {
+        /*lm.addMultiListener(() -> {
             drive.arcadeDrive(-0.7 * RobotMath.thresh(lm.getAxis("MoveTurn"), 0.1),
                     -1.0 * RobotMath.thresh(lm.getAxis("MoveForwards"), 0.1), -1.0 * lm.getAxis("Throttle"), true);
 
-        }, "MoveTurn", "MoveForwards", "Throttle");
+        }, "MoveTurn", "MoveForwards", "Throttle");*/
 
         lm.nameControl(ControllerExtreme3D.TRIGGER, "AlignToTarget");
         lm.addButtonDownListener("AlignToTarget", () -> {
@@ -163,7 +164,7 @@ public class MainAthos extends NarwhalRobot {
         });
 
         lm.addButtonDownListener("ResetGyro", () -> {
-            drive.resetGyro();
+            //drive.resetGyro();
         });
         lm.addButtonDownListener("PrintCSV", () -> {
             Log.info("MainAthos", trackerCSV);
@@ -201,18 +202,18 @@ public class MainAthos extends NarwhalRobot {
 
     @Override
     protected void updateDashboard() {
-        currentLeftSpeed = drive.getLeftSpeed();
+        /*currentLeftSpeed = drive.getLeftSpeed();
         currentLeftDistance = drive.getLeftDistance();
         currentRightSpeed = drive.getRightSpeed();
         currentRightDistance = drive.getRightDistance();
 
         currentSpeed = drive.getSpeed();
-        currentDistance = drive.getDistance();
+        currentDistance = drive.getDistance();*/
 
         NarwhalDashboard.put("time", DriverStation.getInstance().getMatchTime());
         NarwhalDashboard.put("voltage", RobotController.getBatteryVoltage());
 
-        SmartDashboard.putNumber("Gyro Angle", drive.getAngle());
+        //SmartDashboard.putNumber("Gyro Angle", drive.getAngle());
         SmartDashboard.putNumber("Left Distance", currentLeftDistance);
         SmartDashboard.putNumber("Right Distance", currentRightDistance);
 
@@ -221,7 +222,7 @@ public class MainAthos extends NarwhalRobot {
         SmartDashboard.putNumber("Left Velocity", currentLeftSpeed);
         SmartDashboard.putNumber("Right Velocity", currentRightSpeed);
 
-        SmartDashboard.putNumber("Velocity", drive.getSpeed());
+        //SmartDashboard.putNumber("Velocity", drive.getSpeed());
 
         SmartDashboard.putNumber("RobotTracker - x:", robotTracker.getOdometry().getTranslation().getX());
         SmartDashboard.putNumber("RobotTracker - y:", robotTracker.getOdometry().getTranslation().getY());
@@ -261,7 +262,7 @@ public class MainAthos extends NarwhalRobot {
             hasChanged = true;
         }
         if (hasChanged) {
-            drive.setDualVelocityPID(kP, kD, kF);
+            //drive.setDualVelocityPID(kP, kD, kF);
         }
 
         trackerCSV += "\n" + String.valueOf(Timer.getFPGATimestamp() - startTime) + ","
@@ -283,8 +284,8 @@ public class MainAthos extends NarwhalRobot {
         Log.info("MainAthos", "going into autonomousinit");
         scheduler.resume();
         robotTracker.resetOdometry();
-        drive.setAutoTrajectory(trajectory, false);
-        drive.startTrajectory();
+        //drive.setAutoTrajectory(trajectory, false);
+        //drive.startTrajectory();
         startTime = Timer.getFPGATimestamp();
     }
 
@@ -294,7 +295,7 @@ public class MainAthos extends NarwhalRobot {
     }
 
     public static void main(String... args) {
-        RobotBase.startRobot(MainAthos::new);
+        RobotBase.startRobot(testBench::new);
     }
 
     @Override
