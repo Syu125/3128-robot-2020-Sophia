@@ -52,8 +52,8 @@ import java.util.concurrent.*;
 import org.team3128.common.generics.ThreadScheduler;
 
 public class testBench extends NarwhalRobot {
-    //NEODrive drive = NEODrive.getInstance();
-    RobotTracker robotTracker = RobotTracker.getInstance();
+    // NEODrive drive = NEODrive.getInstance();
+    // RobotTracker robotTracker = RobotTracker.getInstance();
 
     ExecutorService executor = Executors.newFixedThreadPool(4);
     ThreadScheduler scheduler = new ThreadScheduler();
@@ -64,6 +64,8 @@ public class testBench extends NarwhalRobot {
     public Gyro gyro;
 
     public DigitalInput digitalInput;
+    public DigitalInput digitalInput2;
+
     public PIDConstants visionPID, blindPID;
 
     public NetworkTable table;
@@ -72,6 +74,12 @@ public class testBench extends NarwhalRobot {
     public double kP = Constants.K_AUTO_LEFT_P;
     public double kD = Constants.K_AUTO_LEFT_D;
     public double kF = Constants.K_AUTO_LEFT_F;
+
+    public boolean inPlace = false;
+    public boolean inPlace2 = false;
+
+    public int countBalls = 0;
+    public int countBalls2 = 0;
 
     public double startTime = 0;
 
@@ -82,11 +90,12 @@ public class testBench extends NarwhalRobot {
 
     @Override
     protected void constructHardware() {
-        
-        digitalInput = new DigitalInput(0);
 
-        //scheduler.schedule(drive, executor);
-        scheduler.schedule(robotTracker, executor);
+        digitalInput = new DigitalInput(0);
+        digitalInput2 = new DigitalInput(1);
+
+        // scheduler.schedule(drive, executor);
+        // scheduler.schedule(robotTracker, executor);
 
         // Instatiator if we're using the NavX
         gyro = new NavX();
@@ -135,7 +144,7 @@ public class testBench extends NarwhalRobot {
 
     @Override
     protected void constructAutoPrograms() {
-       
+
     }
 
     @Override
@@ -148,11 +157,14 @@ public class testBench extends NarwhalRobot {
         lm.nameControl(new Button(3), "ClearTracker");
         lm.nameControl(new Button(4), "ClearCSV");
 
-        /*lm.addMultiListener(() -> {
-            drive.arcadeDrive(-0.7 * RobotMath.thresh(lm.getAxis("MoveTurn"), 0.1),
-                    -1.0 * RobotMath.thresh(lm.getAxis("MoveForwards"), 0.1), -1.0 * lm.getAxis("Throttle"), true);
-
-        }, "MoveTurn", "MoveForwards", "Throttle");*/
+        /*
+         * lm.addMultiListener(() -> { drive.arcadeDrive(-0.7 *
+         * RobotMath.thresh(lm.getAxis("MoveTurn"), 0.1), -1.0 *
+         * RobotMath.thresh(lm.getAxis("MoveForwards"), 0.1), -1.0 *
+         * lm.getAxis("Throttle"), true);
+         * 
+         * }, "MoveTurn", "MoveForwards", "Throttle");
+         */
 
         lm.nameControl(ControllerExtreme3D.TRIGGER, "AlignToTarget");
         lm.addButtonDownListener("AlignToTarget", () -> {
@@ -164,7 +176,7 @@ public class testBench extends NarwhalRobot {
         });
 
         lm.addButtonDownListener("ResetGyro", () -> {
-            //drive.resetGyro();
+            // drive.resetGyro();
         });
         lm.addButtonDownListener("PrintCSV", () -> {
             Log.info("MainAthos", trackerCSV);
@@ -175,15 +187,32 @@ public class testBench extends NarwhalRobot {
             startTime = Timer.getFPGATimestamp();
         });
 
-        lm.addButtonDownListener("ClearTracker", () -> {
-            robotTracker.resetOdometry();
-        });
+        /*
+         * lm.addButtonDownListener("ClearTracker", () -> {s
+         * robotTracker.resetOdometry(); });
+         */
 
     }
 
     @Override
     protected void teleopPeriodic() {
-        System.out.println(digitalInput.get());
+        if (inPlace == false && digitalInput.get()){
+            countBalls++;
+            System.out.println("Number of balls: " + countBalls);
+            inPlace = true;
+        }
+        else if (!digitalInput.get()) {
+            inPlace = false;
+        }
+        
+        if (inPlace2 == false && digitalInput2.get()){
+            countBalls--;
+            System.out.println("Number of balls: " + countBalls);
+            inPlace2 = true;
+        }
+        else if (!digitalInput2.get()) {
+            inPlace2 = false;
+        }
     }
 
     double maxLeftSpeed = 0;
@@ -202,18 +231,18 @@ public class testBench extends NarwhalRobot {
 
     @Override
     protected void updateDashboard() {
-        /*currentLeftSpeed = drive.getLeftSpeed();
-        currentLeftDistance = drive.getLeftDistance();
-        currentRightSpeed = drive.getRightSpeed();
-        currentRightDistance = drive.getRightDistance();
-
-        currentSpeed = drive.getSpeed();
-        currentDistance = drive.getDistance();*/
+        /*
+         * currentLeftSpeed = drive.getLeftSpeed(); currentLeftDistance =
+         * drive.getLeftDistance(); currentRightSpeed = drive.getRightSpeed();
+         * currentRightDistance = drive.getRightDistance();
+         * 
+         * currentSpeed = drive.getSpeed(); currentDistance = drive.getDistance();
+         */
 
         NarwhalDashboard.put("time", DriverStation.getInstance().getMatchTime());
         NarwhalDashboard.put("voltage", RobotController.getBatteryVoltage());
 
-        //SmartDashboard.putNumber("Gyro Angle", drive.getAngle());
+        // SmartDashboard.putNumber("Gyro Angle", drive.getAngle());
         SmartDashboard.putNumber("Left Distance", currentLeftDistance);
         SmartDashboard.putNumber("Right Distance", currentRightDistance);
 
@@ -222,11 +251,14 @@ public class testBench extends NarwhalRobot {
         SmartDashboard.putNumber("Left Velocity", currentLeftSpeed);
         SmartDashboard.putNumber("Right Velocity", currentRightSpeed);
 
-        //SmartDashboard.putNumber("Velocity", drive.getSpeed());
+        // SmartDashboard.putNumber("Velocity", drive.getSpeed());
 
-        SmartDashboard.putNumber("RobotTracker - x:", robotTracker.getOdometry().getTranslation().getX());
-        SmartDashboard.putNumber("RobotTracker - y:", robotTracker.getOdometry().getTranslation().getY());
-        SmartDashboard.putNumber("RobotTracker - theta:", robotTracker.getOdometry().getRotation().getDegrees());
+        // SmartDashboard.putNumber("RobotTracker - x:",
+        // robotTracker.getOdometry().getTranslation().getX());
+        // SmartDashboard.putNumber("RobotTracker - y:",
+        // robotTracker.getOdometry().getTranslation().getY());
+        // SmartDashboard.putNumber("RobotTracker - theta:",
+        // robotTracker.getOdometry().getRotation().getDegrees());
 
         maxLeftSpeed = Math.max(maxLeftSpeed, currentLeftSpeed);
         maxRightSpeed = Math.max(maxRightSpeed, currentRightSpeed);
@@ -241,7 +273,7 @@ public class testBench extends NarwhalRobot {
         SmartDashboard.putNumber("Min Right Speed", minRightSpeed);
 
         SmartDashboard.putNumber("Max Speed", maxSpeed);
-        SmartDashboard.putNumber("Min Speed", minSpeed);
+        SmartDashboard.putNumber("Min Sif(peed", minSpeed);
 
         // read PID coefficients from SmartDashboard
         double p = SmartDashboard.getNumber("P Gain", 0);
@@ -262,15 +294,16 @@ public class testBench extends NarwhalRobot {
             hasChanged = true;
         }
         if (hasChanged) {
-            //drive.setDualVelocityPID(kP, kD, kF);
+            // drive.setDualVelocityPID(kP, kD, kF);
         }
 
-        trackerCSV += "\n" + String.valueOf(Timer.getFPGATimestamp() - startTime) + ","
-                + String.valueOf(robotTracker.getOdometry().translationMat.getX()) + ","
-                + String.valueOf(robotTracker.getOdometry().translationMat.getY()) + ","
-                + String.valueOf(robotTracker.getOdometry().rotationMat.getDegrees()) + ","
-                + String.valueOf(robotTracker.trajOdometry.translationMat.getX()) + ","
-                + String.valueOf(robotTracker.trajOdometry.translationMat.getY());
+        // trackerCSV += "\n" + String.valueOf(Timer.getFPGATimestamp() - startTime) +
+        // ","
+        // + String.valueOf(robotTracker.getOdometry().translationMat.getX()) + ","
+        // + String.valueOf(robotTracker.getOdometry().translationMat.getY()) + ","
+        // + String.valueOf(robotTracker.getOdometry().rotationMat.getDegrees()) + ","
+        // + String.valueOf(robotTracker.trajOdometry.translationMat.getX()) + ","
+        // + String.valueOf(robotTracker.trajOdometry.translationMat.getY());
     }
 
     @Override
@@ -283,9 +316,9 @@ public class testBench extends NarwhalRobot {
         trackerCSV = "Time, X, Y, Theta, Xdes, Ydes";
         Log.info("MainAthos", "going into autonomousinit");
         scheduler.resume();
-        robotTracker.resetOdometry();
-        //drive.setAutoTrajectory(trajectory, false);
-        //drive.startTrajectory();
+        // robotTracker.resetOdometry();
+        // drive.setAutoTrajectory(trajectory, false);
+        // drive.startTrajectory();
         startTime = Timer.getFPGATimestamp();
     }
 
