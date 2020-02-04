@@ -1,5 +1,11 @@
 package org.team3128.testbench.main;
-
+import com.ctre.phoenix.motion.TrajectoryPoint;
+/*
+Task:
+-  neodrive
+- joystick button
+- starting voltage
+*/
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 
@@ -10,6 +16,7 @@ import org.team3128.common.control.trajectory.Trajectory;
 import org.team3128.common.control.trajectory.TrajectoryGenerator;
 import org.team3128.common.control.trajectory.constraint.TrajectoryConstraint;
 import org.team3128.common.drive.DriveCommandRunning;
+import org.team3128.common.drive.DriveSignal;
 import org.team3128.common.hardware.limelight.Limelight;
 import org.team3128.common.hardware.gyroscope.Gyro;
 import org.team3128.common.hardware.gyroscope.NavX;
@@ -49,6 +56,9 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import java.util.ArrayList;
 import java.util.concurrent.*;
 
+import java.io.FileWriter;
+import java.io.IOException;
+
 import org.team3128.common.generics.ThreadScheduler;
 
 public class testBench extends NarwhalRobot {
@@ -59,10 +69,18 @@ public class testBench extends NarwhalRobot {
     ThreadScheduler scheduler = new ThreadScheduler();
     Thread auto;
 
+    public NEODrive neoDrive1;
+    public NEODrive neoDrive2;
+    public NEODrive neoDrive3;
+
+    public NEODrive shootNeoDrive;
+
+    //public DriveSignal driveSignal
     public Joystick joystick;
     public ListenerManager lm;
     public Gyro gyro;
 
+    public DriveSignal driveSignal;
     public DigitalInput digitalInput;
     public DigitalInput digitalInput2;
 
@@ -94,6 +112,12 @@ public class testBench extends NarwhalRobot {
         digitalInput = new DigitalInput(0);
         digitalInput2 = new DigitalInput(1);
 
+        driveSignal = new DriveSignal(5, 0.3, 5, 0.3);
+        neoDrive1 = new NEODrive();
+        neoDrive2 = new NEODrive();
+        neoDrive3 = new NEODrive();
+
+        shootNeoDrive = new NEODrive();
         // scheduler.schedule(drive, executor);
         // scheduler.schedule(robotTracker, executor);
 
@@ -112,6 +136,8 @@ public class testBench extends NarwhalRobot {
         SmartDashboard.putNumber("P Gain", kP);
         SmartDashboard.putNumber("D Gain", kD);
         SmartDashboard.putNumber("F Gain", kF);
+
+        System.out.println("Shooter voltage: " + shootNeoDrive.getVoltage());
 
         // straight
         // waypoints.add(new Pose2D(0, 0, Rotation2D.fromDegrees(180)));
@@ -156,7 +182,8 @@ public class testBench extends NarwhalRobot {
         lm.nameControl(new Button(6), "PrintCSV");
         lm.nameControl(new Button(3), "ClearTracker");
         lm.nameControl(new Button(4), "ClearCSV");
-
+        lm.nameControl(new Button(1), "RunMotors");
+        lm.nameControl(new Button(7), "PrintVoltageVelocity");
         /*
          * lm.addMultiListener(() -> { drive.arcadeDrive(-0.7 *
          * RobotMath.thresh(lm.getAxis("MoveTurn"), 0.1), -1.0 *
@@ -166,6 +193,18 @@ public class testBench extends NarwhalRobot {
          * }, "MoveTurn", "MoveForwards", "Throttle");
          */
 
+        /*lm.addButtonDownListener("RunMotors", ()->{
+            neoDrive1.setWheelPower();
+        });*/
+        lm.addButtonDownListener("PrintVoltageVelocity", ()->{
+            Log.info("testBench.java", "[Shooter Motor] Current Voltage: " + shootNeoDrive.getVoltage() + "\n \t\t Current Velocity: " + shootNeoDrive.getSpeed());
+            try{
+                FileWriter fw = new FileWriter("src/main/java/org/team3128/testbench/main/shooterMotorLog.txt", true);
+                fw.write("Current Voltage: " + shootNeoDrive.getVoltage() + "\nCurrent Velocity: " + shootNeoDrive.getSpeed()+ "\n");
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+        });
         lm.nameControl(ControllerExtreme3D.TRIGGER, "AlignToTarget");
         lm.addButtonDownListener("AlignToTarget", () -> {
             // TODO: Add current implementation of vision alignment
@@ -196,6 +235,8 @@ public class testBench extends NarwhalRobot {
 
     @Override
     protected void teleopPeriodic() {
+
+        shootNeoDrive.setWheelPower(driveSignal);
         if (inPlace == false && digitalInput.get()){
             countBalls++;
             System.out.println("Number of balls: " + countBalls);
@@ -204,7 +245,7 @@ public class testBench extends NarwhalRobot {
         else if (!digitalInput.get()) {
             inPlace = false;
         }
-        
+            
         if (inPlace2 == false && digitalInput2.get()){
             countBalls--;
             System.out.println("Number of balls: " + countBalls);
