@@ -1,4 +1,5 @@
 package org.team3128.testbench.main;
+
 import com.ctre.phoenix.motion.TrajectoryPoint;
 /*
 Task:
@@ -23,6 +24,7 @@ import org.team3128.common.hardware.gyroscope.NavX;
 import org.team3128.common.utility.units.Angle;
 import org.team3128.common.utility.units.Length;
 import org.team3128.common.vision.CmdHorizontalOffsetFeedbackDrive;
+import org.team3128.testbench.subsystems.Shooter;
 import org.team3128.athos.subsystems.Constants;
 import org.team3128.common.utility.Log;
 import org.team3128.common.utility.RobotMath;
@@ -103,12 +105,14 @@ public class testBench extends NarwhalRobot {
 
     public String trackerCSV = "Time, X, Y, Theta, Xdes, Ydes";
 
+    public Shooter shooter;
     public ArrayList<Pose2D> waypoints = new ArrayList<Pose2D>();
     public Trajectory trajectory;
 
     @Override
     protected void constructHardware() {
 
+        shooter = Shooter.getShooter();
         digitalInput = new DigitalInput(0);
         digitalInput2 = new DigitalInput(1);
 
@@ -183,7 +187,8 @@ public class testBench extends NarwhalRobot {
         lm.nameControl(new Button(3), "ClearTracker");
         lm.nameControl(new Button(4), "ClearCSV");
         lm.nameControl(new Button(1), "RunMotors");
-        lm.nameControl(new Button(7), "PrintVoltageVelocity");
+        //lm.nameControl(new Button(7), "PrintVoltageVelocity");
+        lm.nameControl(new Button(7), "Shooter");
         /*
          * lm.addMultiListener(() -> { drive.arcadeDrive(-0.7 *
          * RobotMath.thresh(lm.getAxis("MoveTurn"), 0.1), -1.0 *
@@ -196,6 +201,9 @@ public class testBench extends NarwhalRobot {
         /*lm.addButtonDownListener("RunMotors", ()->{
             neoDrive1.setWheelPower();
         });*/
+        lm.addButtonDownListener("Shooter", ()->{
+            shooter.setTarget(100);
+        });
         lm.addButtonDownListener("PrintVoltageVelocity", ()->{
             Log.info("testBench.java", "[Shooter Motor] Current Voltage: " + shootNeoDrive.getVoltage() + "\n \t\t Current Velocity: " + shootNeoDrive.getSpeed());
             try{

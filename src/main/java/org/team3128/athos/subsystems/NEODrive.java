@@ -69,7 +69,7 @@ public class NEODrive extends Threaded {
 	private CANPIDController leftSparkPID, rightSparkPID;
 	private CANEncoder leftSparkEncoder, rightSparkEncoder;
 
-	private NEODrive() {
+	public NEODrive() {
 
 		gyroSensor = new ADXRS450_Gyro(SPI.Port.kOnboardCS0);
 
@@ -241,7 +241,7 @@ public class NEODrive extends Threaded {
 		return 0;
 	}
 
-	private void setWheelPower(DriveSignal setVelocity) {
+	public void setWheelPower(DriveSignal setVelocity) {
 		leftSpark.set(setVelocity.leftVelocity);
 		rightSpark.set(setVelocity.rightVelocity);
 	}

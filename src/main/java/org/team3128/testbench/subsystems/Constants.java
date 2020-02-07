@@ -105,4 +105,9 @@ public class Constants extends RobotConstants {
         public static final double BOTTOM_LIMELIGHT_ANGLE = 26.0 * Angle.DEGREES;
         public static final double BOTTOM_LIMELIGHT_DISTANCE_FROM_FRONT = 0 * Length.in;
 
+        // ---- SHOOTER
+        public static final int SHOOTER_MOTOR_ID3 =  0;
+        public static final int SHOOTER_MOTOR_ID = 5;
+        public static final int SHOOTER_MOTOR_1_ID = 11;
+        public static final double K_SHOOTER_P = 0;
 }
